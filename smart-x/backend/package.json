@@ -1,0 +1,18 @@
+{
+  "name": "@smart-x/backend",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "db:migrate": "prisma migrate dev",
+    "db:generate": "prisma generate",
+    "db:studio": "prisma studio"
+  },
+  "dependencies": {
+    "@prisma/client": "^7.1.0",
+    "prisma": "^7.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20"
+  }
+}
