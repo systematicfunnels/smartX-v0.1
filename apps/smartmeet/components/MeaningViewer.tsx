@@ -12,7 +12,7 @@ interface MeaningViewerProps {
 
 export function MeaningViewer({ meaning }: MeaningViewerProps) {
   return (
-    <Card className="mt-6">
+    <Card title="Extracted Meaning" className="mt-6">
       <div className="p-4">
         <h3 className="text-lg font-semibold mb-4">Extracted Meaning</h3>
 

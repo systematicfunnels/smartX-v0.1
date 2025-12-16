@@ -12,7 +12,7 @@ interface TranscriptViewerProps {
 
 export function TranscriptViewer({ transcript }: TranscriptViewerProps) {
   return (
-    <Card className="mt-6">
+    <Card title="Transcript" className="mt-6">
       <div className="p-4">
         <h3 className="text-lg font-semibold mb-4">Transcript</h3>
         <div className="space-y-4 max-h-96 overflow-y-auto">
