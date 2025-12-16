@@ -6,7 +6,7 @@ interface JobStatusProps {
   message?: string;
 }
 
-export function JobStatus({ status, progress = 0, message }: JobStatusProps) {
+export const JobStatus: React.FC<JobStatusProps> = ({ status, progress = 0, message }: JobStatusProps) => {
   const getStatusInfo = () => {
     switch (status) {
       case 'pending':
@@ -25,7 +25,7 @@ export function JobStatus({ status, progress = 0, message }: JobStatusProps) {
   const { color, textColor, text } = getStatusInfo();
 
   return (
-    <Card className="mt-6">
+    <Card title="Job Status" className="mt-6">
       <div className="p-4">
         <div className="flex justify-between items-start">
           <div>
