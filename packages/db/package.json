@@ -1,0 +1,17 @@
+{
+  "name": "@smartx/db",
+  "version": "1.0.0",
+  "description": "SmartX database client wrapper",
+  "main": "index.ts",
+  "types": "index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint . --fix"
+  },
+  "dependencies": {
+    "@prisma/client": "^7.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4"
+  }
+}

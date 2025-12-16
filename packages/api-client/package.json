@@ -1,0 +1,17 @@
+{
+  "name": "@smartx/api-client",
+  "version": "1.0.0",
+  "description": "SmartX typed API client",
+  "main": "index.ts",
+  "types": "index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint . --fix"
+  },
+  "dependencies": {
+    "axios": "^1.7.7"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4"
+  }
+}

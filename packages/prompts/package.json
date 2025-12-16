@@ -1,0 +1,11 @@
+{
+  "name": "@smartx/prompts",
+  "version": "1.0.0",
+  "description": "SmartX AI prompt templates",
+  "main": "index.ts",
+  "types": "index.d.ts",
+  "scripts": {
+    "build": "echo \"Prompt templates - no build required\"",
+    "lint": "echo \"No linting for prompt templates\""
+  }
+}

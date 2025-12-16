@@ -1,0 +1,14 @@
+{
+  "name": "@smartx/types",
+  "version": "1.0.0",
+  "description": "SmartX shared TypeScript types",
+  "main": "index.ts",
+  "types": "index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint . --fix"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4"
+  }
+}

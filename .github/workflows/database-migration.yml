@@ -1,0 +1,42 @@
+name: Database Migration
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'backend/prisma/**'
+      - 'backend/package.json'
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: cd backend && npm install
+
+      - name: Generate Prisma client
+        run: cd backend && npx prisma generate
+
+      - name: Run database migrations
+        run: cd backend && npx prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Verify migration status
+        run: cd backend && npx prisma migrate status
+
+      - name: Run backfill scripts if needed
+        run: |
+          cd backend
+          if [ -f "scripts/backfill-tenant-features.ts" ]; then
+            npx ts-node scripts/backfill-tenant-features.ts
+          fi
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}

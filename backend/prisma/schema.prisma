@@ -1,0 +1,288 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+/// ----------------
+/// ENUMS
+/// ----------------
+
+enum UserRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum DocumentType {
+  PRD
+  BRD
+  STRATEGY
+  SOP
+  GDD
+  PITCH
+  CUSTOM
+}
+
+enum WorkerType {
+  TRANSCRIBE
+  MEANING
+  DOCUMENT
+  CODEGEN
+}
+
+enum JobType {
+  MEETING_PIPELINE
+  DOCUMENT_PIPELINE
+  CODE_PIPELINE
+}
+
+enum JobStatus {
+  PENDING
+  RUNNING
+  FAILED
+  SUCCESS
+}
+
+/// ----------------
+/// TENANCY
+/// ----------------
+
+model Tenant {
+  id           String        @id @default(cuid())
+  name         String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  // Feature flags
+  hasMeet      Boolean       @default(true)
+  hasDoc       Boolean       @default(false)
+  hasCode      Boolean       @default(false)
+
+  // Retention policies (days) - null = unlimited
+  transcriptRetentionDays Int?
+  documentRetentionDays   Int?
+  repositoryRetentionDays Int?
+  jobRetentionDays        Int?
+
+  users        UserTenant[]
+  projects     Project[]
+  jobs         MasterJob[]
+  meetings     Meeting[]
+  transcripts  TranscriptSegment[]
+  knowledge    KnowledgeSchema[]
+  documents    DocumentVersion[]
+  tasks        TaskJob[]
+}
+
+model User {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  name         String?
+  image        String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  tenants      UserTenant[]
+}
+
+model UserTenant {
+  id        String    @id @default(cuid())
+  tenantId  String
+  userId    String
+  role      UserRole @default(MEMBER)
+
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([tenantId, userId])
+}
+
+/// ----------------
+/// PROJECTS
+/// ----------------
+
+model Project {
+  id           String        @id @default(cuid())
+  tenantId     String
+  name         String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  tenant       Tenant        @relation(fields: [tenantId], references: [id])
+  meetings     Meeting[]
+  documents    Document[]
+  repositories Repository[]
+  jobs         MasterJob[]
+}
+
+/// ----------------
+/// MEETINGS
+/// ----------------
+
+model Meeting {
+  id              String              @id @default(cuid())
+  projectId       String
+  tenantId        String
+  title           String
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  deletedAt       DateTime?
+
+  transcript      TranscriptSegment[]
+  knowledge       KnowledgeSchema?
+
+  project         Project             @relation(fields: [projectId], references: [id])
+  tenant          Tenant              @relation(fields: [tenantId], references: [id])
+
+  @@index([deletedAt])
+  @@index([projectId])
+  @@index([tenantId])
+}
+
+model TranscriptSegment {
+  id          String    @id @default(cuid())
+  meetingId   String
+  tenantId    String
+  speaker     String
+  text        String
+  startTime   Float?
+  endTime     Float?
+  isEdited    Boolean   @default(false)
+  deletedAt   DateTime?
+
+  meeting     Meeting   @relation(fields: [meetingId], references: [id])
+  tenant      Tenant    @relation(fields: [tenantId], references: [id])
+
+  @@index([meetingId])
+  @@index([deletedAt])
+  @@index([tenantId])
+}
+
+/// ----------------
+/// KNOWLEDGE SCHEMA (CORE BRAIN)
+/// ----------------
+
+model KnowledgeSchema {
+  id          String     @id @default(cuid())
+  meetingId   String     @unique
+  tenantId    String
+  source      String     // MEETING | TEXT | IMPORT
+  data        Json
+  confidence  Float?
+  metadata    Json?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  meeting     Meeting    @relation(fields: [meetingId], references: [id])
+  tenant      Tenant     @relation(fields: [tenantId], references: [id])
+}
+
+/// ----------------
+/// DOCUMENTS
+/// ----------------
+
+model Document {
+  id          String        @id @default(cuid())
+  projectId   String
+  tenantId    String
+  type        DocumentType
+  title       String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  deletedAt   DateTime?
+  archivedAt  DateTime?
+
+  project     Project       @relation(fields: [projectId], references: [id])
+  versions    DocumentVersion[]
+
+  @@index([deletedAt])
+  @@index([archivedAt])
+  @@index([projectId])
+  @@index([tenantId])
+}
+
+model DocumentVersion {
+  id          String     @id @default(cuid())
+  documentId  String
+  tenantId    String
+  content     Json
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  document    Document   @relation(fields: [documentId], references: [id])
+  tenant      Tenant     @relation(fields: [tenantId], references: [id])
+
+  @@index([documentId])
+  @@index([tenantId])
+}
+
+/// ----------------
+/// CODE / REPOSITORIES
+/// ----------------
+
+model Repository {
+  id              String     @id @default(cuid())
+  projectId       String
+  tenantId        String
+  stack           String
+  data            Json
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  deletedAt       DateTime?
+  isPinned        Boolean   @default(false)
+  lastAccessedAt  DateTime?
+
+  project         Project    @relation(fields: [projectId], references: [id])
+
+  @@index([deletedAt])
+  @@index([isPinned])
+  @@index([lastAccessedAt])
+}
+
+/// ----------------
+/// JOBS & TASKS (AI PIPELINE)
+/// ----------------
+
+model MasterJob {
+  id          String     @id @default(cuid())
+  projectId   String
+  tenantId    String
+  type        JobType
+  status      JobStatus  @default(PENDING)
+  payload     Json
+  result      Json?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  deletedAt   DateTime?
+
+  project     Project    @relation(fields: [projectId], references: [id])
+  tenant      Tenant     @relation(fields: [tenantId], references: [id])
+  tasks       TaskJob[]
+
+  @@index([deletedAt])
+  @@index([projectId])
+  @@index([tenantId])
+}
+
+model TaskJob {
+  id            String     @id @default(cuid())
+  masterJobId   String
+  tenantId      String
+  worker        WorkerType
+  status        JobStatus  @default(PENDING)
+  payload       Json
+  result        Json?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  deletedAt     DateTime?
+
+  masterJob     MasterJob  @relation(fields: [masterJobId], references: [id])
+  tenant        Tenant     @relation(fields: [tenantId], references: [id])
+
+  @@index([deletedAt])
+  @@index([masterJobId])
+  @@index([tenantId])
+}

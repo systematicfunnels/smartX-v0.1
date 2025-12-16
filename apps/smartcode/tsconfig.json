@@ -1,0 +1,6 @@
+{
+  "extends": "../../config/tsconfig.frontend.json",
+  "compilerOptions": {
+    "strict": true
+  }
+}
